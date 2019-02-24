@@ -55,6 +55,18 @@ namespace PortMidi
         [DllImport(NativeLibrary, EntryPoint = "Pm_Abort", CallingConvention = CallingConvention.Cdecl)]
         private static extern PmError Pm_Abort(IntPtr stream);
 
+        [DllImport(NativeLibrary, EntryPoint = "Pm_Poll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern PmError Pm_Poll(IntPtr stream);
+
+        [DllImport(NativeLibrary, EntryPoint = "Pm_Synchronize", CallingConvention = CallingConvention.Cdecl)]
+        private static extern PmError Pm_Synchronize(IntPtr stream);
+
+        [DllImport(NativeLibrary, EntryPoint = "Pm_SetFilter", CallingConvention = CallingConvention.Cdecl)]
+        private static extern PmError Pm_SetFilter(IntPtr stream, int filters);
+
+        [DllImport(NativeLibrary, EntryPoint = "Pm_Read", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int Pm_Read(IntPtr stream, PmEvent* e, int length);
+
         [DllImport(NativeLibrary, EntryPoint = "Pt_Time", CallingConvention = CallingConvention.Cdecl)]
         private static extern int Pt_Time();
 
@@ -256,6 +268,100 @@ namespace PortMidi
                 return;
             }
             PmError error = Pm_Abort(stream.pmStream);
+            if (error != 0)
+            {
+                throw new Exception(ConvertToError(error));
+            }
+        }
+
+        // Reads from the input stream, the max number events to be read are
+        // determined by max.
+        public static Event[] Read(Stream stream, int max)
+        {
+            Event[] events = new Event[0];
+            if (max > stream.bufferSize) throw new Exception("Out of bounds");
+            PmEvent[] pm_events = new PmEvent[max];
+            fixed (PmEvent* p = &pm_events[0])
+            {
+                int numEvents = Pm_Read(stream.pmStream, p, max);
+                events = new Event[numEvents];
+
+                for (int i = 0; i < numEvents; i++)
+                {
+                    Event e = new Event();
+                    e.Timestamp = pm_events[i].timestamp;
+                    e.Status = (int)(pm_events[i].message) & 0xFF;
+                    e.Data1 = (int)(pm_events[i].message >> 8) & 0xFF;
+                    e.Data2 = (int)(pm_events[i].message >> 16) & 0xFF;
+                    events[i] = e;
+                }
+            }
+            return events;
+        }
+
+        // ReadSysExBytes reads 4*max sysex bytes from the input stream.
+        public static byte[] ReadSysExBytes(Stream stream, int max)
+        {
+            byte[] msg = new byte[0];
+            if (max > stream.bufferSize) throw new Exception("Out of bounds");
+            PmEvent[] pm_events = new PmEvent[max];
+            fixed (PmEvent* p = &pm_events[0])
+            {
+                int numEvents = Pm_Read(stream.pmStream, p, max);
+                msg = new byte[4 * numEvents];
+
+                for (int i = 0; i < numEvents; i++)
+                {
+                    msg[4 * i + 0] = (byte)(pm_events[i].message & 0xFF);
+                    msg[4 * i + 1] = (byte)((pm_events[i].message >> 8) & 0xFF);
+                    msg[4 * i + 2] = (byte)((pm_events[i].message >> 16) & 0xFF);
+                    msg[4 * i + 3] = (byte)((pm_events[i].message >> 24) & 0xFF);
+                }
+            }
+            return msg;
+        }
+
+        // Poll reports whether there is input available in the stream.
+        public static bool Poll(Stream stream)
+        {
+            PmError error = Pm_Poll(stream.pmStream);
+            if (error < 0)
+            {
+                throw new Exception(ConvertToError(error));
+            }
+            return error > 0;
+        }
+
+        // instructs PortMidi to (re)synchronize to the time_proc passed when the stream was opened.
+        public static bool Synchronize(Stream stream)
+        {
+            PmError error = Pm_Synchronize(stream.pmStream);
+            if (error < 0)
+            {
+                throw new Exception(ConvertToError(error));
+            }
+            return error > 0;
+        }
+
+        // sets filters on an open input stream to drop selected input types. By default, only active sensing messages are filtered
+        public static void SetFilter(Stream stream, PortMidiFilter[] filters)
+        {
+            if (filters.Length == 0)
+            {
+                PmError err = Pm_SetFilter(stream.pmStream, (int)PortMidiFilter.PM_FILT_ACTIVE);
+                if (err != 0)
+                {
+                    throw new Exception(ConvertToError(err));
+                }
+            }
+
+            int filtersMask = 0;
+            foreach (PortMidiFilter filter in filters)
+            {
+                filtersMask |= (int)filter;
+            }
+
+            PmError error = Pm_SetFilter(stream.pmStream, (int)PortMidiFilter.PM_FILT_ACTIVE);
             if (error != 0)
             {
                 throw new Exception(ConvertToError(error));
