@@ -6,7 +6,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/mrdev023/UNITY_PORTMIDI_WRAPPER.git",
-		"revision": "bdb556e64749c2dbd7218e31c080d48f3053388f"
+		"revision": "4cf93f8bb06a8bcb60136febedbfc78ec88f2ff8"
 	},
   	"description": "PortMidi wrapper for Unity 3D. Compatibility for Mac OSX (64 bits only), Linux (64 bits only) and Windows (64 bits only)",
 	"keywords": [
