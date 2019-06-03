@@ -1,0 +1,22 @@
+{
+	"name": "fr.mrdev023.portmidi",
+	"displayName": "Port Midi",
+	"version": "0.1.1-preview",
+	"unity": "2018.3",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/mrdev023/UNITY_PORTMIDI_WRAPPER.git",
+		"revision": "bdb556e64749c2dbd7218e31c080d48f3053388f"
+	},
+  	"description": "PortMidi wrapper for Unity 3D. Compatibility for Mac OSX (64 bits only), Linux (64 bits only) and Windows (64 bits only)",
+	"keywords": [
+        "midi",
+        "portmidi",
+        "native",
+        "unity3d",
+        "64bits only",
+        "desktop only"
+	],
+	"dependencies": {
+	}
+}
