@@ -1,4 +1,7 @@
-﻿using System.Collections;
+#EXAMPLE
+
+```csharp
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using PortMidi;
@@ -53,3 +56,4 @@ public class Test : MonoBehaviour
         }
     }
 }
+```
