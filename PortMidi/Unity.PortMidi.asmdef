@@ -1,5 +1,5 @@
 {
-    "name": "PortMidi",
+    "name": "Unity.PortMidi",
     "references": [],
     "includePlatforms": [
         "Editor",
